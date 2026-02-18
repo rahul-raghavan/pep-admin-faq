@@ -22,12 +22,28 @@ export interface Category {
   updated_at: string;
 }
 
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AppUser {
+  id: string;
+  email: string;
+  role: 'user' | 'super_admin';
+  created_at: string;
+  updated_at: string;
+}
+
 export interface FaqEntry {
   id: string;
   question: string;
   answer: string;
-  category_id: string | null;
-  category?: Category;
+  categories?: Category[];
+  tags?: Tag[];
   source_voice_note_id: string | null;
   source_transcript_excerpt: string | null;
   is_merged: boolean;
@@ -58,4 +74,19 @@ export interface DeduplicationResult {
   merge_into_id?: string;
   merged_answer?: string;
   reason: string;
+}
+
+export interface ContributionMergeResult {
+  primary_update: {
+    merged_answer: string;
+    transcript_excerpt: string;
+    change_summary: string;
+  };
+  related_updates: {
+    faq_id: string;
+    merged_answer: string;
+    transcript_excerpt: string;
+    change_summary: string;
+  }[];
+  summary: string;
 }

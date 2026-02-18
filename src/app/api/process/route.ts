@@ -1,17 +1,9 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase-server';
-import { getOpenAIClient } from '@/lib/openai';
 import { getAnthropicClient } from '@/lib/anthropic';
 import { buildFaqExtractionPrompt, buildDeduplicationPrompt } from '@/lib/prompts';
+import { transcribeVoiceNote } from '@/lib/transcribe';
 import { NextResponse } from 'next/server';
-import { writeFile, unlink, readFile } from 'fs/promises';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
-import { tmpdir } from 'os';
-import { join } from 'path';
 import type { ExtractedFaq, DeduplicationResult } from '@/types';
-
-const execFileAsync = promisify(execFile);
-const WHISPER_MAX_SIZE = 24 * 1024 * 1024; // 24MB (with margin under 25MB limit)
 
 export const maxDuration = 120; // Allow up to 2 minutes for processing
 
@@ -50,73 +42,7 @@ export async function POST(request: Request) {
 
   try {
     // === STEP 1: Transcription (skip if already transcribed) ===
-    let transcript = voiceNote.transcript as string | null;
-
-    if (transcript) {
-      console.log('Transcript already exists, skipping Whisper transcription');
-    } else {
-      await db
-        .from('adminpkm_voice_notes')
-        .update({ status: 'transcribing', error_message: null })
-        .eq('id', voiceNoteId);
-
-      // Download audio from Supabase Storage
-      const { data: fileData, error: downloadError } = await db.storage
-        .from('adminpkm-voice-notes')
-        .download(voiceNote.file_path);
-
-      if (downloadError || !fileData) {
-        throw new Error(`Failed to download audio: ${downloadError?.message}`);
-      }
-
-      // Compress if file is too large for Whisper (25MB limit)
-      const openai = getOpenAIClient();
-      let audioFile: File;
-
-      if (fileData.size > WHISPER_MAX_SIZE) {
-        const tempInput = join(tmpdir(), `adminpkm-${Date.now()}-input`);
-        const tempOutput = join(tmpdir(), `adminpkm-${Date.now()}-output.mp3`);
-
-        try {
-          const buffer = Buffer.from(await fileData.arrayBuffer());
-          await writeFile(tempInput, buffer);
-
-          // Compress to mono MP3 at 64kbps (plenty for speech)
-          await execFileAsync('ffmpeg', [
-            '-i', tempInput,
-            '-ac', '1',           // mono
-            '-ab', '64k',         // 64kbps bitrate
-            '-ar', '16000',       // 16kHz sample rate (optimal for Whisper)
-            '-y',                 // overwrite
-            tempOutput,
-          ]);
-
-          const compressedData = await readFile(tempOutput);
-          audioFile = new File([compressedData], 'audio.mp3', { type: 'audio/mpeg' });
-
-          await unlink(tempInput).catch(() => {});
-          await unlink(tempOutput).catch(() => {});
-        } catch (compressError) {
-          await unlink(tempInput).catch(() => {});
-          await unlink(tempOutput).catch(() => {});
-          throw new Error(`Audio compression failed: ${compressError instanceof Error ? compressError.message : 'unknown'}`);
-        }
-      } else {
-        audioFile = new File([fileData], voiceNote.file_name, { type: 'audio/mp4' });
-      }
-
-      const transcription = await openai.audio.transcriptions.create({
-        model: 'whisper-1',
-        file: audioFile,
-      });
-
-      transcript = transcription.text;
-
-      await db
-        .from('adminpkm_voice_notes')
-        .update({ status: 'transcribed', transcript })
-        .eq('id', voiceNoteId);
-    }
+    const transcript = await transcribeVoiceNote(db, voiceNote);
 
     // === STEP 2: FAQ Extraction ===
     await db
@@ -216,14 +142,21 @@ export async function POST(request: Request) {
     for (const faq of extractionData.faqs as ExtractedFaq[]) {
       const categoryId = categoryMap[faq.category] || null;
 
-      // Get existing FAQs in this category for dedup
+      // Get existing FAQs in this category for dedup (via join table)
       let existingFaqs: { id: string; question: string; answer: string }[] = [];
       if (categoryId) {
-        const { data } = await db
-          .from('adminpkm_faq_entries')
-          .select('id, question, answer')
+        const { data: links } = await db
+          .from('adminpkm_faq_entry_categories')
+          .select('faq_entry_id')
           .eq('category_id', categoryId);
-        existingFaqs = data || [];
+        const faqIds = (links || []).map((l: { faq_entry_id: string }) => l.faq_entry_id);
+        if (faqIds.length > 0) {
+          const { data } = await db
+            .from('adminpkm_faq_entries')
+            .select('id, question, answer')
+            .in('id', faqIds);
+          existingFaqs = data || [];
+        }
       }
 
       let action: DeduplicationResult = { action: 'add', reason: 'No existing entries' };
@@ -254,28 +187,40 @@ export async function POST(request: Request) {
       }
 
       if (action.action === 'add') {
-        await db.from('adminpkm_faq_entries').insert({
+        const { data: inserted } = await db.from('adminpkm_faq_entries').insert({
           question: faq.question,
           answer: faq.answer,
-          category_id: categoryId,
           source_voice_note_id: voiceNoteId,
           source_transcript_excerpt: faq.transcript_excerpt,
-        });
+        }).select('id').single();
+
+        if (inserted && categoryId) {
+          await db.from('adminpkm_faq_entry_categories').insert({
+            faq_entry_id: inserted.id,
+            category_id: categoryId,
+          });
+        }
       } else if (action.action === 'merge' && action.merge_into_id) {
         await db
           .from('adminpkm_faq_entries')
           .update({ answer: action.merged_answer })
           .eq('id', action.merge_into_id);
 
-        await db.from('adminpkm_faq_entries').insert({
+        const { data: inserted } = await db.from('adminpkm_faq_entries').insert({
           question: faq.question,
           answer: faq.answer,
-          category_id: categoryId,
           source_voice_note_id: voiceNoteId,
           source_transcript_excerpt: faq.transcript_excerpt,
           is_merged: true,
           merged_from_id: action.merge_into_id,
-        });
+        }).select('id').single();
+
+        if (inserted && categoryId) {
+          await db.from('adminpkm_faq_entry_categories').insert({
+            faq_entry_id: inserted.id,
+            category_id: categoryId,
+          });
+        }
       } else if (action.action === 'conflict' && action.merge_into_id) {
         // Pull the existing entry from the KB and flag for review
         await db

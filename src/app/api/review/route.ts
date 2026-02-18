@@ -6,13 +6,13 @@ export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user?.email || !isSuperAdmin(user.email)) {
+  if (!user?.email || !(await isSuperAdmin(user.email))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const { data, error } = await supabase
     .from('adminpkm_faq_entries')
-    .select('*, category:adminpkm_categories(*)')
+    .select('*, categories:adminpkm_faq_entry_categories(category:adminpkm_categories(*))')
     .eq('review_status', 'needs_review')
     .order('updated_at', { ascending: false });
 
@@ -20,14 +20,20 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  // Flatten nested join results
+  const flattened = (data || []).map((entry: Record<string, unknown>) => ({
+    ...entry,
+    categories: ((entry.categories as { category: unknown }[]) || []).map((c) => c.category),
+  }));
+
+  return NextResponse.json(flattened);
 }
 
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user?.email || !isSuperAdmin(user.email)) {
+  if (!user?.email || !(await isSuperAdmin(user.email))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

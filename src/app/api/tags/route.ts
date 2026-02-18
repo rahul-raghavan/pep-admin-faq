@@ -11,9 +11,8 @@ export async function GET() {
   }
 
   const { data, error } = await supabase
-    .from('adminpkm_categories')
+    .from('adminpkm_tags')
     .select('*')
-    .order('sort_order')
     .order('name');
 
   if (error) {
@@ -33,7 +32,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const { name, description } = await request.json();
+  const { name, color } = await request.json();
 
   if (!name) {
     return NextResponse.json({ error: 'Name is required' }, { status: 400 });
@@ -41,14 +40,14 @@ export async function POST(request: Request) {
 
   const db = createServiceRoleClient();
   const { data, error } = await db
-    .from('adminpkm_categories')
-    .insert({ name, description: description || null })
+    .from('adminpkm_tags')
+    .insert({ name, color: color || '#6B7280' })
     .select()
     .single();
 
   if (error) {
     if (error.code === '23505') {
-      return NextResponse.json({ error: 'A category with this name already exists' }, { status: 409 });
+      return NextResponse.json({ error: 'A tag with this name already exists' }, { status: 409 });
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

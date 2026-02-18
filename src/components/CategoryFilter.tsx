@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import type { Category } from '@/types';
 
 interface CategoryFilterProps {
@@ -8,7 +9,7 @@ interface CategoryFilterProps {
   onSelect: (id: string | null) => void;
 }
 
-export default function CategoryFilter({
+export default memo(function CategoryFilter({
   categories,
   selected,
   onSelect,
@@ -40,4 +41,4 @@ export default function CategoryFilter({
       ))}
     </div>
   );
-}
+});

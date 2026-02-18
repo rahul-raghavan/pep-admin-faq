@@ -46,6 +46,56 @@ Respond with valid JSON only, no markdown fences:
 }`;
 }
 
+export function buildContributionMergePrompt(
+  transcript: string,
+  primaryFaq: { id: string; question: string; answer: string },
+  relatedFaqs: { id: string; question: string; answer: string }[]
+): string {
+  const relatedList = relatedFaqs.length > 0
+    ? relatedFaqs
+        .map((f) => `[ID: ${f.id}]\nQ: ${f.question}\nA: ${f.answer}`)
+        .join('\n\n')
+    : '(none)';
+
+  return `You are updating a school admin knowledge base based on a new voice contribution.
+
+A user has recorded a voice note to contribute additional information to an existing FAQ entry. Your job is to merge the new information from the transcript into the existing answer, and check whether any related FAQs in the same categories are also affected.
+
+PRIMARY FAQ BEING UPDATED:
+[ID: ${primaryFaq.id}]
+Q: ${primaryFaq.question}
+A: ${primaryFaq.answer}
+
+OTHER FAQs IN THE SAME CATEGORIES:
+${relatedList}
+
+VOICE NOTE TRANSCRIPT:
+${transcript}
+
+INSTRUCTIONS:
+1. Merge the new information from the transcript into the primary FAQ's answer. Keep the existing structure and language, but incorporate any new details, corrections, or updates.
+2. Check if any of the related FAQs are also affected by the transcript (e.g. the transcript mentions something that updates or contradicts a related FAQ). Only include related FAQs that are genuinely affected — don't force updates.
+3. For each update, include a brief excerpt from the transcript that supports the change.
+
+Respond with valid JSON only, no markdown fences:
+{
+  "primary_update": {
+    "merged_answer": "the full updated answer for the primary FAQ",
+    "transcript_excerpt": "relevant part of transcript",
+    "change_summary": "one sentence describing what changed"
+  },
+  "related_updates": [
+    {
+      "faq_id": "id of affected related FAQ",
+      "merged_answer": "the full updated answer",
+      "transcript_excerpt": "relevant part of transcript",
+      "change_summary": "one sentence describing what changed"
+    }
+  ],
+  "summary": "one sentence summary of the contribution"
+}`;
+}
+
 export function buildDeduplicationPrompt(
   newFaq: { question: string; answer: string },
   existingFaqs: { id: string; question: string; answer: string }[]

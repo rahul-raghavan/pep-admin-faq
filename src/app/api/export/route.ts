@@ -9,10 +9,10 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Fetch all approved, non-merged FAQ entries with categories
+  // Fetch all approved, non-merged FAQ entries with categories via join table
   const { data: entries, error } = await supabase
     .from('adminpkm_faq_entries')
-    .select('question, answer, category:adminpkm_categories(name)')
+    .select('question, answer, categories:adminpkm_faq_entry_categories(category:adminpkm_categories(name))')
     .eq('is_merged', false)
     .eq('review_status', 'approved')
     .order('created_at', { ascending: true });
@@ -21,23 +21,25 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Group by category
-  const grouped: Record<string, { question: string; answer: string }[]> = {};
-
-  for (const entry of entries || []) {
-    const cat = entry.category as any;
-    const catName = (Array.isArray(cat) ? cat[0]?.name : cat?.name) || 'Uncategorized';
-    if (!grouped[catName]) grouped[catName] = [];
-    grouped[catName].push({ question: entry.question, answer: entry.answer });
-  }
-
-  // Build markdown
+  // Build markdown — list categories inline per entry instead of grouping
   const lines: string[] = [
     '# PEP Admin FAQs',
     '',
     `*Exported on ${new Date().toLocaleDateString()}*`,
     '',
   ];
+
+  // Group by first category for structure, but show all categories inline
+  const grouped: Record<string, { question: string; answer: string; allCategories: string[] }[]> = {};
+
+  for (const entry of entries || []) {
+    const cats = ((entry.categories as unknown as { category: { name: string } | null }[]) || [])
+      .map((c) => c.category?.name)
+      .filter(Boolean) as string[];
+    const primaryCat = cats[0] || 'Uncategorized';
+    if (!grouped[primaryCat]) grouped[primaryCat] = [];
+    grouped[primaryCat].push({ question: entry.question, answer: entry.answer, allCategories: cats });
+  }
 
   const sortedCategories = Object.keys(grouped).sort();
 
@@ -46,6 +48,9 @@ export async function GET() {
     lines.push('');
     for (const faq of grouped[category]) {
       lines.push(`### ${faq.question}`);
+      if (faq.allCategories.length > 1) {
+        lines.push(`*Categories: ${faq.allCategories.join(', ')}*`);
+      }
       lines.push('');
       lines.push(faq.answer);
       lines.push('');

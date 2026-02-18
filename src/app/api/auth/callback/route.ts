@@ -31,10 +31,10 @@ export async function GET(request: Request) {
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser();
 
-      if (user?.email && !isAllowedEmail(user.email)) {
+      if (user?.email && !(await isAllowedEmail(user.email))) {
         await supabase.auth.signOut();
         return NextResponse.redirect(
-          `${origin}/login?error=unauthorized_domain`
+          `${origin}/login?error=not_invited`
         );
       }
 

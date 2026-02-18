@@ -30,7 +30,9 @@ function LoginContent() {
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
-            {error === 'unauthorized_domain'
+            {error === 'not_invited'
+              ? 'Your email is not on the invite list. Ask a super admin to add you.'
+              : error === 'unauthorized_domain'
               ? 'Your email domain is not authorized. Please use your school email.'
               : error}
           </div>

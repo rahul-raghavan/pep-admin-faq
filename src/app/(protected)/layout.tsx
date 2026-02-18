@@ -1,6 +1,5 @@
-import { createClient } from '@/lib/supabase-server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
-import { isSuperAdmin } from '@/lib/auth';
 import Navbar from '@/components/Navbar';
 
 export default async function ProtectedLayout({
@@ -15,9 +14,17 @@ export default async function ProtectedLayout({
     redirect('/login');
   }
 
+  // Single DB query to check role (avoids separate isSuperAdmin call)
+  const db = createServiceRoleClient();
+  const { data: appUser } = await db
+    .from('adminpkm_users')
+    .select('role')
+    .eq('email', (user.email || '').toLowerCase())
+    .single();
+
   return (
     <>
-      <Navbar userEmail={user.email || ''} isAdmin={isSuperAdmin(user.email || '')} />
+      <Navbar userEmail={user.email || ''} isAdmin={appUser?.role === 'super_admin'} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>

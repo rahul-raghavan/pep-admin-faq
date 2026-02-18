@@ -1,12 +1,21 @@
-const ALLOWED_DOMAINS = ['pepschoolv2.com', 'accelschool.in', 'ribbons.education'];
+import { createServiceRoleClient } from './supabase-server';
 
-const SUPER_ADMINS = ['rahul@pepschoolv2.com', 'chetan@pepschoolv2.com'];
-
-export function isAllowedEmail(email: string): boolean {
-  const domain = email.split('@')[1]?.toLowerCase();
-  return ALLOWED_DOMAINS.includes(domain);
+export async function isAllowedEmail(email: string): Promise<boolean> {
+  const db = createServiceRoleClient();
+  const { data } = await db
+    .from('adminpkm_users')
+    .select('id')
+    .eq('email', email.toLowerCase())
+    .single();
+  return !!data;
 }
 
-export function isSuperAdmin(email: string): boolean {
-  return SUPER_ADMINS.includes(email.toLowerCase());
+export async function isSuperAdmin(email: string): Promise<boolean> {
+  const db = createServiceRoleClient();
+  const { data } = await db
+    .from('adminpkm_users')
+    .select('role')
+    .eq('email', email.toLowerCase())
+    .single();
+  return data?.role === 'super_admin';
 }

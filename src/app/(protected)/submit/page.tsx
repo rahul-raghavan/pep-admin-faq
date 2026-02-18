@@ -81,7 +81,7 @@ export default function SubmitPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Submit Voice Note</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Contribute</h1>
 
       <div className="space-y-6">
         <div className="bg-white rounded-lg border border-gray-200 p-6">

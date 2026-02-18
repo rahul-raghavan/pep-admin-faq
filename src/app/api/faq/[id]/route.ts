@@ -15,7 +15,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('adminpkm_faq_entries')
-    .select('*, category:adminpkm_categories(*)')
+    .select('*, categories:adminpkm_faq_entry_categories(category:adminpkm_categories(*)), tags:adminpkm_faq_entry_tags(tag:adminpkm_tags(*))')
     .eq('id', id)
     .single();
 
@@ -23,5 +23,12 @@ export async function GET(
     return NextResponse.json({ error: error.message }, { status: 404 });
   }
 
-  return NextResponse.json(data);
+  // Flatten nested join results
+  const flattened = {
+    ...data,
+    categories: ((data.categories as { category: unknown }[]) || []).map((c) => c.category),
+    tags: ((data.tags as { tag: unknown }[]) || []).map((t) => t.tag),
+  };
+
+  return NextResponse.json(flattened);
 }

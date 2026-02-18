@@ -4,20 +4,39 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import MarkdownContent from '@/components/MarkdownContent';
-import type { FaqEntry } from '@/types';
+import ContributePanel from '@/components/ContributePanel';
+import CategoryAssigner from '@/components/CategoryAssigner';
+import TagAssigner from '@/components/TagAssigner';
+import type { FaqEntry, Category, Tag } from '@/types';
 
 export default function FaqDetailPage() {
   const { id } = useParams();
   const [entry, setEntry] = useState<FaqEntry | null>(null);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchEntry = () => {
     fetch(`/api/faq/${id}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setEntry(data);
         setLoading(false);
       });
+  };
+
+  // Fetch entry + reference data in parallel on mount
+  useEffect(() => {
+    Promise.all([
+      fetch(`/api/faq/${id}`).then((r) => r.ok ? r.json() : null),
+      fetch('/api/categories').then((r) => r.ok ? r.json() : []),
+      fetch('/api/tags').then((r) => r.ok ? r.json() : []),
+    ]).then(([entryData, cats, tgs]) => {
+      setEntry(entryData);
+      setAllCategories(cats);
+      setAllTags(tgs);
+      setLoading(false);
+    });
   }, [id]);
 
   if (loading) {
@@ -28,30 +47,39 @@ export default function FaqDetailPage() {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">FAQ entry not found.</p>
-        <Link href="/kb" className="text-blue-600 hover:underline mt-2 inline-block">
+        <Link href="/" className="text-blue-600 hover:underline mt-2 inline-block">
           Back to Knowledge Base
         </Link>
       </div>
     );
   }
 
-  const category = entry.category as { name: string } | null;
-
   return (
     <div>
       <Link
-        href="/kb"
+        href="/"
         className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block"
       >
         &larr; Back to Knowledge Base
       </Link>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        {category && (
-          <span className="inline-block mb-3 px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-            {category.name}
-          </span>
-        )}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {entry.categories?.map((cat) => (
+            <span key={cat.id} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+              {cat.name}
+            </span>
+          ))}
+          {entry.tags?.map((tag) => (
+            <span
+              key={tag.id}
+              className="px-2 py-0.5 rounded text-xs font-medium"
+              style={{ backgroundColor: tag.color + '20', color: tag.color }}
+            >
+              {tag.name}
+            </span>
+          ))}
+        </div>
 
         <h1 className="text-xl font-bold text-gray-900 mb-4">{entry.question}</h1>
 
@@ -67,6 +95,27 @@ export default function FaqDetailPage() {
             </blockquote>
           </div>
         )}
+
+        {entry.review_status === 'approved' && (
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <ContributePanel faqEntryId={entry.id} faqQuestion={entry.question} />
+          </div>
+        )}
+
+        <div className="mt-6 pt-4 border-t border-gray-100 space-y-4">
+          <CategoryAssigner
+            faqEntryId={entry.id}
+            currentCategories={entry.categories || []}
+            allCategories={allCategories}
+            onUpdate={fetchEntry}
+          />
+          <TagAssigner
+            faqEntryId={entry.id}
+            currentTags={entry.tags || []}
+            allTags={allTags}
+            onUpdate={fetchEntry}
+          />
+        </div>
 
         <p className="text-xs text-gray-400 mt-4">
           Added {new Date(entry.created_at).toLocaleDateString()}

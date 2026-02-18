@@ -70,7 +70,6 @@ export default function ReviewPage() {
       ) : (
         <div className="space-y-6">
           {entries.map((entry) => {
-            const category = entry.category as { name: string } | null;
             const isEditing = editingId === entry.id;
             const isSubmitting = submitting === entry.id;
 
@@ -79,10 +78,14 @@ export default function ReviewPage() {
                 key={entry.id}
                 className="bg-white rounded-lg border border-amber-200 p-6"
               >
-                {category && (
-                  <span className="inline-block mb-2 px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                    {category.name}
-                  </span>
+                {entry.categories && entry.categories.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {entry.categories.map((cat) => (
+                      <span key={cat.id} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                        {cat.name}
+                      </span>
+                    ))}
+                  </div>
                 )}
 
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
