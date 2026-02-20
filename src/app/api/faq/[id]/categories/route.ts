@@ -45,10 +45,14 @@ export async function PUT(
   }
 
   // Delete existing assignments
-  await supabase
+  const { error: deleteError } = await supabase
     .from('adminpkm_faq_entry_categories')
     .delete()
     .eq('faq_entry_id', id);
+
+  if (deleteError) {
+    return NextResponse.json({ error: `Failed to clear categories: ${deleteError.message}` }, { status: 500 });
+  }
 
   // Insert new assignments
   if (categoryIds.length > 0) {

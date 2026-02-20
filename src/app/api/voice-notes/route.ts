@@ -1,4 +1,5 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase-server';
+import { isSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -71,12 +72,20 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Use service role client for reads — auth is already verified above
+  // Admins see all submissions; regular users see only their own
   const db = createServiceRoleClient();
-  const { data, error } = await db
+  const isAdmin = user.email ? await isSuperAdmin(user.email) : false;
+
+  let query = db
     .from('adminpkm_voice_notes')
     .select('*')
     .order('created_at', { ascending: false });
+
+  if (!isAdmin) {
+    query = query.eq('user_id', user.id);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

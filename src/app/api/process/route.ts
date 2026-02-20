@@ -1,4 +1,5 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase-server';
+import { isSuperAdmin } from '@/lib/auth';
 import { getAnthropicClient } from '@/lib/anthropic';
 import { buildFaqExtractionPrompt, buildDeduplicationPrompt } from '@/lib/prompts';
 import { transcribeVoiceNote } from '@/lib/transcribe';
@@ -34,10 +35,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Voice note not found' }, { status: 404 });
   }
 
+  // Verify ownership: only the uploader or an admin can process
+  const isAdmin = user.email ? await isSuperAdmin(user.email) : false;
+  if (voiceNote.user_id !== user.id && !isAdmin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   if (!['uploaded', 'transcribed', 'error'].includes(voiceNote.status)) {
     return NextResponse.json(
       { error: `Voice note is already ${voiceNote.status}` },
       { status: 400 }
+    );
+  }
+
+  // Atomically claim this note for processing (prevents duplicate processing)
+  const { data: claimed, error: claimError } = await db
+    .from('adminpkm_voice_notes')
+    .update({ status: 'transcribing', error_message: null })
+    .eq('id', voiceNoteId)
+    .in('status', ['uploaded', 'transcribed', 'error'])
+    .select('id')
+    .single();
+
+  if (claimError || !claimed) {
+    return NextResponse.json(
+      { error: 'This note is already being processed' },
+      { status: 409 }
     );
   }
 
@@ -116,16 +139,12 @@ export async function POST(request: Request) {
     // === STEP 3: Create new categories ===
     const categoryMap: Record<string, string> = {};
 
-    // Map existing categories
-    if (existingCategories) {
-      for (const cat of existingCategories) {
-        const { data } = await db
-          .from('adminpkm_categories')
-          .select('id')
-          .eq('name', cat.name)
-          .single();
-        if (data) categoryMap[cat.name] = data.id;
-      }
+    // Map existing categories (single query instead of N+1)
+    const { data: allCategories } = await db
+      .from('adminpkm_categories')
+      .select('id, name');
+    for (const cat of allCategories || []) {
+      categoryMap[cat.name] = cat.id;
     }
 
     // Create new categories

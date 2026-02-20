@@ -76,88 +76,77 @@ export async function POST(request: Request) {
 
   const db = createServiceRoleClient();
 
-  if (action === 'keep_original') {
-    // Keep the original answer, discard the conflict
-    await db
+  // Helper: approve with cleared conflict fields
+  const approveAndClear = (answer?: string) =>
+    db
       .from('adminpkm_faq_entries')
       .update({
+        ...(answer !== undefined ? { answer } : {}),
         review_status: 'approved',
         conflicting_answer: null,
         conflicting_source_voice_note_id: null,
         conflicting_transcript_excerpt: null,
       })
       .eq('id', entryId);
+
+  let dbError;
+
+  if (action === 'keep_original') {
+    const { error } = await approveAndClear();
+    dbError = error;
   } else if (action === 'use_new') {
-    // Replace with the conflicting answer
-    const { data: entry } = await db
+    const { data: entry, error: fetchErr } = await db
       .from('adminpkm_faq_entries')
       .select('conflicting_answer')
       .eq('id', entryId)
       .single();
-
-    await db
-      .from('adminpkm_faq_entries')
-      .update({
-        answer: entry?.conflicting_answer,
-        review_status: 'approved',
-        conflicting_answer: null,
-        conflicting_source_voice_note_id: null,
-        conflicting_transcript_excerpt: null,
-      })
-      .eq('id', entryId);
+    if (fetchErr || !entry) {
+      return NextResponse.json({ error: 'Entry not found' }, { status: 404 });
+    }
+    const { error } = await approveAndClear(entry.conflicting_answer);
+    dbError = error;
   } else if (action === 'edit' && editedAnswer) {
-    // Use a manually edited answer
-    await db
-      .from('adminpkm_faq_entries')
-      .update({
-        answer: editedAnswer,
-        review_status: 'approved',
-        conflicting_answer: null,
-        conflicting_source_voice_note_id: null,
-        conflicting_transcript_excerpt: null,
-      })
-      .eq('id', entryId);
+    const { error } = await approveAndClear(editedAnswer);
+    dbError = error;
   } else if (action === 'approve_new') {
-    // Approve a pending new entry
-    await db
+    const { error } = await db
       .from('adminpkm_faq_entries')
       .update({ review_status: 'approved' })
       .eq('id', entryId);
+    dbError = error;
   } else if (action === 'reject_new') {
-    // Delete a rejected new entry (and its category links)
-    await db.from('adminpkm_faq_entry_categories').delete().eq('faq_entry_id', entryId);
-    await db.from('adminpkm_faq_entries').delete().eq('id', entryId);
+    const { error: catErr } = await db
+      .from('adminpkm_faq_entry_categories')
+      .delete()
+      .eq('faq_entry_id', entryId);
+    if (catErr) {
+      return NextResponse.json({ error: `Failed to remove categories: ${catErr.message}` }, { status: 500 });
+    }
+    const { error } = await db
+      .from('adminpkm_faq_entries')
+      .delete()
+      .eq('id', entryId);
+    dbError = error;
   } else if (action === 'approve_merge') {
-    // Accept the AI-proposed merged answer
-    const { data: entry } = await db
+    const { data: entry, error: fetchErr } = await db
       .from('adminpkm_faq_entries')
       .select('conflicting_answer')
       .eq('id', entryId)
       .single();
-
-    await db
-      .from('adminpkm_faq_entries')
-      .update({
-        answer: entry?.conflicting_answer,
-        review_status: 'approved',
-        conflicting_answer: null,
-        conflicting_source_voice_note_id: null,
-        conflicting_transcript_excerpt: null,
-      })
-      .eq('id', entryId);
+    if (fetchErr || !entry) {
+      return NextResponse.json({ error: 'Entry not found' }, { status: 404 });
+    }
+    const { error } = await approveAndClear(entry.conflicting_answer);
+    dbError = error;
   } else if (action === 'reject_merge') {
-    // Keep the original answer, discard proposed merge
-    await db
-      .from('adminpkm_faq_entries')
-      .update({
-        review_status: 'approved',
-        conflicting_answer: null,
-        conflicting_source_voice_note_id: null,
-        conflicting_transcript_excerpt: null,
-      })
-      .eq('id', entryId);
+    const { error } = await approveAndClear();
+    dbError = error;
   } else {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+  }
+
+  if (dbError) {
+    return NextResponse.json({ error: `Database error: ${dbError.message}` }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

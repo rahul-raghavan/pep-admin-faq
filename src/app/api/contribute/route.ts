@@ -51,6 +51,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Voice note not found' }, { status: 404 });
   }
 
+  // Verify the voice note belongs to this user
+  if (voiceNote.user_id !== user.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     // Step 1: Transcribe
     const transcript = await transcribeVoiceNote(db, voiceNote);
@@ -155,7 +160,13 @@ export async function POST(request: Request) {
       .eq('id', faqEntryId);
 
     // Flag any related FAQs that Claude identified as affected
+    // Only allow IDs that we actually sent to Claude (prevent hallucinated IDs)
+    const validRelatedIds = new Set(relatedFaqs.map((f) => f.id));
     for (const related of mergeResult.related_updates) {
+      if (!validRelatedIds.has(related.faq_id)) {
+        console.warn(`Skipping hallucinated FAQ ID from Claude: ${related.faq_id}`);
+        continue;
+      }
       await db
         .from('adminpkm_faq_entries')
         .update({

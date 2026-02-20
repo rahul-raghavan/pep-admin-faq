@@ -45,10 +45,14 @@ export async function PUT(
   }
 
   // Delete existing assignments
-  await supabase
+  const { error: deleteError } = await supabase
     .from('adminpkm_faq_entry_tags')
     .delete()
     .eq('faq_entry_id', id);
+
+  if (deleteError) {
+    return NextResponse.json({ error: `Failed to clear tags: ${deleteError.message}` }, { status: 500 });
+  }
 
   // Insert new assignments
   if (tagIds.length > 0) {
