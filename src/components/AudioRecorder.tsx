@@ -63,19 +63,19 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
         <>
           <button
             onClick={stopRecording}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
+            className="px-4 py-2 bg-[#D4705A] text-white rounded-[4px] uppercase text-sm tracking-wider hover:bg-[#D4705A]/90 transition-colors cursor-pointer"
           >
             Stop Recording
           </button>
-          <span className="text-sm text-red-600 font-medium flex items-center gap-2">
-            <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+          <span className="text-sm text-[#D4705A] font-medium flex items-center gap-2">
+            <span className="w-2 h-2 bg-[#D4705A] rounded-full animate-pulse" />
             Recording {formatDuration(duration)}
           </span>
         </>
       ) : (
         <button
           onClick={startRecording}
-          className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
+          className="px-4 py-2 bg-[#5BB8D6] text-white rounded-[4px] uppercase text-sm tracking-wider hover:bg-[#5BB8D6]/90 transition-colors cursor-pointer"
         >
           Record Audio
         </button>

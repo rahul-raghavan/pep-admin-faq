@@ -5,12 +5,12 @@ import ProcessingStatus from '@/components/ProcessingStatus';
 import type { VoiceNote } from '@/types';
 
 const statusColors: Record<string, string> = {
-  uploaded: 'bg-gray-100 text-gray-700',
-  transcribing: 'bg-blue-100 text-blue-700',
-  transcribed: 'bg-blue-100 text-blue-700',
-  processing: 'bg-yellow-100 text-yellow-700',
-  completed: 'bg-green-100 text-green-700',
-  error: 'bg-red-100 text-red-700',
+  uploaded: 'bg-[#F0EFED] text-[#222]',
+  transcribing: 'bg-[#5BB8D6]/10 text-[#5BB8D6]',
+  transcribed: 'bg-[#5BB8D6]/10 text-[#5BB8D6]',
+  processing: 'bg-[#5BB8D6]/10 text-[#5BB8D6]',
+  completed: 'bg-[#5BB8D6]/15 text-[#222]',
+  error: 'bg-[#D4705A]/10 text-[#D4705A]',
 };
 
 export default function SubmissionsPage() {
@@ -62,7 +62,7 @@ export default function SubmissionsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-gray-500">Loading submissions...</p>
+        <p className="text-[#222]/50">Loading submissions...</p>
       </div>
     );
   }
@@ -70,12 +70,12 @@ export default function SubmissionsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Submissions</h1>
+        <h1 className="section-heading text-base">Submissions</h1>
         {notes.some((n) => n.status === 'uploaded') && (
           <button
             onClick={handleProcessAll}
             disabled={processingId !== null}
-            className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2 bg-[#5BB8D6] text-white rounded-[4px] uppercase text-sm tracking-wider hover:bg-[#5BB8D6]/90 transition-colors disabled:opacity-50 cursor-pointer"
           >
             Process All
           </button>
@@ -83,24 +83,24 @@ export default function SubmissionsPage() {
       </div>
 
       {notes.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-[#222]/50">
           <p>No voice notes yet.</p>
-          <a href="/submit" className="text-blue-600 hover:underline mt-2 inline-block">
+          <a href="/submit" className="text-[#D4705A] hover:underline mt-2 inline-block">
             Submit your first voice note
           </a>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+        <div className="bg-white rounded-[4px] border border-[#F0EFED] divide-y divide-[#F0EFED]">
           {notes.map((note) => (
             <div key={note.id} className="p-4 flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-[#222] truncate">
                   {note.file_name}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-[#222]/50 mt-0.5">
                   {new Date(note.created_at).toLocaleString()}
                   {note.error_message && note.status === 'error' && (
-                    <span className="text-red-500 ml-2">{note.error_message}</span>
+                    <span className="text-[#D4705A] ml-2">{note.error_message}</span>
                   )}
                 </p>
               </div>
@@ -109,8 +109,8 @@ export default function SubmissionsPage() {
                   <ProcessingStatus status={note.status} />
                 ) : (
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      statusColors[note.status] || 'bg-gray-100 text-gray-700'
+                    className={`px-2 py-1 rounded-[4px] text-xs font-medium ${
+                      statusColors[note.status] || 'bg-[#F0EFED] text-[#222]'
                     }`}
                   >
                     {note.status}
@@ -120,7 +120,7 @@ export default function SubmissionsPage() {
                   <button
                     onClick={() => handleProcess(note.id)}
                     disabled={processingId !== null}
-                    className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
+                    className="px-3 py-1.5 text-sm bg-[#5BB8D6] text-white rounded-[4px] hover:bg-[#5BB8D6]/90 disabled:opacity-50 cursor-pointer"
                   >
                     {processingId === note.id ? 'Processing...' : note.status === 'error' ? 'Retry' : 'Process'}
                   </button>

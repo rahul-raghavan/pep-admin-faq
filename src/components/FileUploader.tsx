@@ -33,19 +33,19 @@ export default function FileUploader({ onFilesSelected, multiple = true }: FileU
   return (
     <div
       {...getRootProps()}
-      className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+      className={`border-2 border-dashed rounded-[4px] p-8 text-center cursor-pointer transition-colors ${
         isDragActive
-          ? 'border-blue-400 bg-blue-50'
-          : 'border-gray-300 hover:border-gray-400'
+          ? 'border-[#5BB8D6] bg-[#5BB8D6]/5'
+          : 'border-[#F0EFED] hover:border-[#5BB8D6]/40'
       }`}
     >
       <input {...getInputProps()} />
-      <p className="text-gray-600">
+      <p className="text-[#222]/70">
         {isDragActive
           ? 'Drop audio files here...'
           : 'Drag & drop audio files here, or click to select'}
       </p>
-      <p className="text-sm text-gray-400 mt-1">
+      <p className="text-sm text-[#222]/40 mt-1">
         Supports M4A, MP3, WebM, WAV{multiple ? ' (multiple files OK)' : ''}
       </p>
     </div>

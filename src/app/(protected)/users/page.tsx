@@ -76,21 +76,21 @@ export default function UsersPage() {
     }
   };
 
-  if (loading) return <p className="text-gray-500 text-center py-12">Loading...</p>;
+  if (loading) return <p className="text-[#222]/50 text-center py-12">Loading...</p>;
 
   if (forbidden) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">You don&apos;t have permission to manage users.</p>
+        <p className="text-[#222]/50">You don&apos;t have permission to manage users.</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">User Management</h1>
+      <h1 className="section-heading text-base mb-6">User Management</h1>
 
-      <form onSubmit={handleInvite} className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+      <form onSubmit={handleInvite} className="bg-white rounded-[4px] border border-[#F0EFED] p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-3">
           <input
             type="email"
@@ -98,12 +98,12 @@ export default function UsersPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-2 border border-[#F0EFED] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#5BB8D6]/40 focus:border-[#5BB8D6]"
           />
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as 'user' | 'super_admin')}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-[#F0EFED] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#5BB8D6]/40 focus:border-[#5BB8D6]"
           >
             <option value="user">User</option>
             <option value="super_admin">Super Admin</option>
@@ -111,51 +111,51 @@ export default function UsersPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 transition-colors disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2 bg-[#5BB8D6] text-white rounded-[4px] text-sm uppercase tracking-wider hover:bg-[#5BB8D6]/90 transition-colors disabled:opacity-50 cursor-pointer"
           >
             {submitting ? 'Inviting...' : 'Invite'}
           </button>
         </div>
-        {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+        {error && <p className="text-[#D4705A] text-sm mt-2">{error}</p>}
       </form>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-[4px] border border-[#F0EFED] overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-50">
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Role</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Added</th>
-              <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <tr className="border-b border-[#F0EFED] bg-[#F0EFED]">
+              <th className="text-left px-4 py-3 text-xs font-medium text-[#222]/60 uppercase">Email</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-[#222]/60 uppercase">Role</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-[#222]/60 uppercase">Added</th>
+              <th className="text-right px-4 py-3 text-xs font-medium text-[#222]/60 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="border-b border-gray-100 last:border-0">
-                <td className="px-4 py-3 text-sm text-gray-900">{u.email}</td>
+              <tr key={u.id} className="border-b border-[#F0EFED] last:border-0">
+                <td className="px-4 py-3 text-sm text-[#222]">{u.email}</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                  <span className={`inline-block px-2 py-0.5 rounded-[4px] text-xs font-medium ${
                     u.role === 'super_admin'
-                      ? 'bg-purple-100 text-purple-700'
-                      : 'bg-gray-100 text-gray-600'
+                      ? 'bg-[#5BB8D6]/15 text-[#5BB8D6]'
+                      : 'bg-[#F0EFED] text-[#222]/60'
                   }`}>
                     {u.role === 'super_admin' ? 'Super Admin' : 'User'}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-500">
+                <td className="px-4 py-3 text-sm text-[#222]/60">
                   {new Date(u.created_at).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => handleToggleRole(u.id, u.role)}
-                      className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
+                      className="text-xs text-[#5BB8D6] hover:text-[#5BB8D6]/80 cursor-pointer"
                     >
                       {u.role === 'super_admin' ? 'Make User' : 'Make Admin'}
                     </button>
                     <button
                       onClick={() => handleDelete(u.id, u.email)}
-                      className="text-xs text-red-600 hover:text-red-800 cursor-pointer"
+                      className="text-xs text-[#D4705A] hover:text-[#D4705A]/80 cursor-pointer"
                     >
                       Remove
                     </button>

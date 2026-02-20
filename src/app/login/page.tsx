@@ -19,17 +19,17 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#F0EFED]">
+      <div className="max-w-md w-full bg-white rounded-[4px] shadow-sm p-8 space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">PEP Admin FAQs</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-medium text-[#222] tracking-wide">PEP Admin FAQs</h1>
+          <p className="mt-2 text-[#222]/60">
             Voice notes → searchable knowledge base
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+          <div className="bg-[#D4705A]/10 border border-[#D4705A]/30 rounded-[4px] p-4 text-[#D4705A] text-sm">
             {error === 'not_invited'
               ? 'Your email is not on the invite list. Ask a super admin to add you.'
               : error === 'unauthorized_domain'
@@ -40,7 +40,7 @@ function LoginContent() {
 
         <button
           onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-[#F0EFED] rounded-[4px] bg-white text-[#222] hover:bg-[#5BB8D6]/5 hover:border-[#5BB8D6]/30 transition-colors cursor-pointer"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -58,8 +58,8 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-500">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#F0EFED]">
+        <div className="text-[#222]/50">Loading...</div>
       </div>
     }>
       <LoginContent />

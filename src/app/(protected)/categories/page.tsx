@@ -21,8 +21,6 @@ export default function CategoriesPage() {
     setLoading(false);
   };
 
-  // Check admin access by trying to create (we'll get 403 if not admin)
-  // Actually, just load categories — the Create button will show 403 if needed
   useEffect(() => { fetchCategories(); }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -81,21 +79,21 @@ export default function CategoriesPage() {
     }
   };
 
-  if (loading) return <p className="text-gray-500 text-center py-12">Loading...</p>;
+  if (loading) return <p className="text-[#222]/50 text-center py-12">Loading...</p>;
 
   if (forbidden) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">You don&apos;t have permission to manage categories.</p>
+        <p className="text-[#222]/50">You don&apos;t have permission to manage categories.</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Category Management</h1>
+      <h1 className="section-heading text-base mb-6">Category Management</h1>
 
-      <form onSubmit={handleCreate} className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+      <form onSubmit={handleCreate} className="bg-white rounded-[4px] border border-[#F0EFED] p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-3">
           <input
             type="text"
@@ -103,38 +101,38 @@ export default function CategoriesPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-2 border border-[#F0EFED] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#5BB8D6]/40 focus:border-[#5BB8D6]"
           />
           <input
             type="text"
             placeholder="Description (optional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-2 border border-[#F0EFED] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#5BB8D6]/40 focus:border-[#5BB8D6]"
           />
           <button
             type="submit"
             disabled={submitting}
-            className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 transition-colors disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2 bg-[#5BB8D6] text-white rounded-[4px] text-sm uppercase tracking-wider hover:bg-[#5BB8D6]/90 transition-colors disabled:opacity-50 cursor-pointer"
           >
             {submitting ? 'Creating...' : 'Create'}
           </button>
         </div>
-        {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+        {error && <p className="text-[#D4705A] text-sm mt-2">{error}</p>}
       </form>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-[4px] border border-[#F0EFED] overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-50">
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Description</th>
-              <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <tr className="border-b border-[#F0EFED] bg-[#F0EFED]">
+              <th className="text-left px-4 py-3 text-xs font-medium text-[#222]/60 uppercase">Name</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-[#222]/60 uppercase">Description</th>
+              <th className="text-right px-4 py-3 text-xs font-medium text-[#222]/60 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody>
             {categories.map((cat) => (
-              <tr key={cat.id} className="border-b border-gray-100 last:border-0">
+              <tr key={cat.id} className="border-b border-[#F0EFED] last:border-0">
                 {editingId === cat.id ? (
                   <>
                     <td className="px-4 py-3">
@@ -142,7 +140,7 @@ export default function CategoriesPage() {
                         type="text"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-2 py-1 border border-[#F0EFED] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#5BB8D6]/40"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -150,20 +148,20 @@ export default function CategoriesPage() {
                         type="text"
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-2 py-1 border border-[#F0EFED] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#5BB8D6]/40"
                       />
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => handleEdit(cat.id)}
-                          className="text-xs text-green-600 hover:text-green-800 cursor-pointer"
+                          className="text-xs text-[#5BB8D6] hover:text-[#5BB8D6]/80 cursor-pointer"
                         >
                           Save
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
-                          className="text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
+                          className="text-xs text-[#222]/50 hover:text-[#222]/70 cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -172,8 +170,8 @@ export default function CategoriesPage() {
                   </>
                 ) : (
                   <>
-                    <td className="px-4 py-3 text-sm text-gray-900">{cat.name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500">{cat.description || '—'}</td>
+                    <td className="px-4 py-3 text-sm text-[#222]">{cat.name}</td>
+                    <td className="px-4 py-3 text-sm text-[#222]/60">{cat.description || '—'}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <button
@@ -182,13 +180,13 @@ export default function CategoriesPage() {
                             setEditName(cat.name);
                             setEditDescription(cat.description || '');
                           }}
-                          className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
+                          className="text-xs text-[#5BB8D6] hover:text-[#5BB8D6]/80 cursor-pointer"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(cat.id, cat.name)}
-                          className="text-xs text-red-600 hover:text-red-800 cursor-pointer"
+                          className="text-xs text-[#D4705A] hover:text-[#D4705A]/80 cursor-pointer"
                         >
                           Delete
                         </button>
@@ -200,7 +198,7 @@ export default function CategoriesPage() {
             ))}
             {categories.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-sm text-gray-500">
+                <td colSpan={3} className="px-4 py-8 text-center text-sm text-[#222]/50">
                   No categories yet. Create one above.
                 </td>
               </tr>

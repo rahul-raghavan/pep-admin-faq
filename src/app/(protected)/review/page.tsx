@@ -45,27 +45,27 @@ export default function ReviewPage() {
   };
 
   if (loading) {
-    return <p className="text-gray-500 text-center py-12">Loading...</p>;
+    return <p className="text-[#222]/50 text-center py-12">Loading...</p>;
   }
 
   if (forbidden) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">You don't have access to this page.</p>
+        <p className="text-[#222]/50">You don't have access to this page.</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Review Queue</h1>
-      <p className="text-sm text-gray-500 mb-6">
+      <h1 className="section-heading text-base mb-2">Review Queue</h1>
+      <p className="text-sm text-[#222]/60 mb-6">
         These FAQ entries have conflicting answers from different voice notes. Review and choose the correct answer.
       </p>
 
       {entries.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <p className="text-gray-500">No entries need review. All clear!</p>
+        <div className="text-center py-12 bg-white rounded-[4px] border border-[#F0EFED]">
+          <p className="text-[#222]/50">No entries need review. All clear!</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -76,41 +76,41 @@ export default function ReviewPage() {
             return (
               <div
                 key={entry.id}
-                className="bg-white rounded-lg border border-amber-200 p-6"
+                className="bg-white rounded-[4px] border border-[#D4705A]/30 p-6"
               >
                 {entry.categories && entry.categories.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {entry.categories.map((cat) => (
-                      <span key={cat.id} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                      <span key={cat.id} className="px-2 py-0.5 bg-[#F0EFED] text-[#222]/70 rounded-[4px] text-xs">
                         {cat.name}
                       </span>
                     ))}
                   </div>
                 )}
 
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                <h2 className="text-lg font-semibold text-[#222] mb-4">
                   {entry.question}
                 </h2>
 
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
+                  <div className="border border-[#F0EFED] rounded-[4px] p-4">
+                    <p className="section-heading mb-2">
                       Current Answer
                     </p>
-                    <div className="text-sm text-gray-700">
+                    <div className="text-sm text-[#222]/80">
                       <MarkdownContent content={entry.answer} />
                     </div>
                   </div>
 
-                  <div className="border border-amber-200 rounded-lg p-4 bg-amber-50">
-                    <p className="text-xs font-medium text-amber-600 uppercase tracking-wide mb-2">
+                  <div className="border border-[#D4705A]/30 rounded-[4px] p-4 bg-[#D4705A]/5">
+                    <p className="text-xs font-medium text-[#D4705A] uppercase tracking-[0.15em] mb-2">
                       Conflicting Answer (new)
                     </p>
-                    <div className="text-sm text-gray-700">
+                    <div className="text-sm text-[#222]/80">
                       <MarkdownContent content={entry.conflicting_answer || ''} />
                     </div>
                     {entry.conflicting_transcript_excerpt && (
-                      <blockquote className="mt-3 text-xs text-gray-500 italic border-l-2 border-amber-200 pl-2">
+                      <blockquote className="mt-3 text-xs text-[#222]/50 italic border-l-2 border-[#D4705A]/30 pl-2">
                         {entry.conflicting_transcript_excerpt}
                       </blockquote>
                     )}
@@ -123,20 +123,20 @@ export default function ReviewPage() {
                       value={editText}
                       onChange={(e) => setEditText(e.target.value)}
                       rows={6}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-[#F0EFED] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#5BB8D6]/40 focus:border-[#5BB8D6]"
                       placeholder="Write your corrected answer..."
                     />
                     <div className="flex gap-2 mt-2">
                       <button
                         onClick={() => handleAction(entry.id, 'edit', editText)}
                         disabled={isSubmitting || !editText.trim()}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
+                        className="px-4 py-2 bg-[#5BB8D6] text-white rounded-[4px] text-sm uppercase tracking-wider hover:bg-[#5BB8D6]/90 disabled:opacity-50 cursor-pointer"
                       >
                         Save Edited Answer
                       </button>
                       <button
                         onClick={() => setEditingId(null)}
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 cursor-pointer"
+                        className="px-4 py-2 bg-[#F0EFED] text-[#222] rounded-[4px] text-sm hover:bg-[#F0EFED]/80 cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -147,14 +147,14 @@ export default function ReviewPage() {
                     <button
                       onClick={() => handleAction(entry.id, 'keep_original')}
                       disabled={isSubmitting}
-                      className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 disabled:opacity-50 cursor-pointer"
+                      className="px-4 py-2 bg-[#222] text-white rounded-[4px] text-sm uppercase tracking-wider hover:bg-[#222]/90 disabled:opacity-50 cursor-pointer"
                     >
                       Keep Original
                     </button>
                     <button
                       onClick={() => handleAction(entry.id, 'use_new')}
                       disabled={isSubmitting}
-                      className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700 disabled:opacity-50 cursor-pointer"
+                      className="px-4 py-2 bg-[#D4705A] text-white rounded-[4px] text-sm uppercase tracking-wider hover:bg-[#D4705A]/90 disabled:opacity-50 cursor-pointer"
                     >
                       Use New Answer
                     </button>
@@ -164,7 +164,7 @@ export default function ReviewPage() {
                         setEditText(entry.answer);
                       }}
                       disabled={isSubmitting}
-                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+                      className="px-4 py-2 bg-white border border-[#F0EFED] text-[#222] rounded-[4px] text-sm hover:bg-[#F0EFED]/50 disabled:opacity-50 cursor-pointer"
                     >
                       Edit Manually
                     </button>

@@ -17,28 +17,27 @@ export default memo(function FaqCard({ entry }: { entry: FaqEntry }) {
   return (
     <Link
       href={`/kb/${entry.id}`}
-      className="block bg-white rounded-lg border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all"
+      className="group block bg-white rounded-[4px] border border-[#F0EFED] p-6 hover:shadow-md hover:border-[#5BB8D6]/30 transition-all duration-200"
     >
-      <h3 className="text-base font-semibold text-gray-900 mb-2">{entry.question}</h3>
-      <p className="text-sm text-gray-600 line-clamp-3">
+      <h3 className="text-[15px] font-semibold text-[#222] mb-2 leading-snug group-hover:text-[#5BB8D6] transition-colors">
+        {entry.question}
+      </h3>
+      <p className="text-[13px] text-[#222]/50 line-clamp-2 leading-relaxed">
         {stripMarkdown(entry.answer)}
       </p>
-      <div className="flex flex-wrap gap-1.5 mt-3">
-        {entry.categories?.map((cat) => (
-          <span key={cat.id} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-            {cat.name}
-          </span>
-        ))}
-        {entry.tags?.map((tag) => (
-          <span
-            key={tag.id}
-            className="px-2 py-0.5 rounded text-xs font-medium"
-            style={{ backgroundColor: tag.color + '20', color: tag.color }}
-          >
-            {tag.name}
-          </span>
-        ))}
-      </div>
+      {entry.tags && entry.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {entry.tags.map((tag) => (
+            <span
+              key={tag.id}
+              className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium"
+              style={{ backgroundColor: tag.color + '15', color: tag.color }}
+            >
+              {tag.name}
+            </span>
+          ))}
+        </div>
+      )}
     </Link>
   );
 });

@@ -18,10 +18,10 @@ export default memo(function CategoryFilter({
     <div className="flex flex-wrap gap-2">
       <button
         onClick={() => onSelect(null)}
-        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
+        className={`px-3 py-1.5 rounded-[4px] text-sm font-medium transition-colors cursor-pointer ${
           selected === null
-            ? 'bg-gray-900 text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'bg-[#5BB8D6] text-white'
+            : 'bg-[#F0EFED] text-[#222] hover:bg-[#5BB8D6]/10'
         }`}
       >
         All
@@ -30,10 +30,10 @@ export default memo(function CategoryFilter({
         <button
           key={cat.id}
           onClick={() => onSelect(cat.id)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
+          className={`px-3 py-1.5 rounded-[4px] text-sm font-medium transition-colors cursor-pointer ${
             selected === cat.id
-              ? 'bg-gray-900 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'bg-[#5BB8D6] text-white'
+              : 'bg-[#F0EFED] text-[#222] hover:bg-[#5BB8D6]/10'
           }`}
         >
           {cat.name}

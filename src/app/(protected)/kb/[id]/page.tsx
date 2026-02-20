@@ -40,14 +40,14 @@ export default function FaqDetailPage() {
   }, [id]);
 
   if (loading) {
-    return <p className="text-gray-500 text-center py-12">Loading...</p>;
+    return <p className="text-[#222]/50 text-center py-12">Loading...</p>;
   }
 
   if (!entry) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">FAQ entry not found.</p>
-        <Link href="/" className="text-blue-600 hover:underline mt-2 inline-block">
+        <p className="text-[#222]/50">FAQ entry not found.</p>
+        <Link href="/" className="text-[#D4705A] hover:underline mt-2 inline-block">
           Back to Knowledge Base
         </Link>
       </div>
@@ -58,22 +58,22 @@ export default function FaqDetailPage() {
     <div>
       <Link
         href="/"
-        className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block"
+        className="text-sm text-[#D4705A] hover:text-[#D4705A]/80 mb-4 inline-block"
       >
         &larr; Back to Knowledge Base
       </Link>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-[4px] border border-[#F0EFED] p-8">
         <div className="flex flex-wrap gap-1.5 mb-3">
           {entry.categories?.map((cat) => (
-            <span key={cat.id} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+            <span key={cat.id} className="px-2 py-0.5 bg-[#F0EFED] text-[#222]/70 rounded-[4px] text-xs">
               {cat.name}
             </span>
           ))}
           {entry.tags?.map((tag) => (
             <span
               key={tag.id}
-              className="px-2 py-0.5 rounded text-xs font-medium"
+              className="px-2 py-0.5 rounded-[4px] text-xs font-medium"
               style={{ backgroundColor: tag.color + '20', color: tag.color }}
             >
               {tag.name}
@@ -81,28 +81,28 @@ export default function FaqDetailPage() {
           ))}
         </div>
 
-        <h1 className="text-xl font-bold text-gray-900 mb-4">{entry.question}</h1>
+        <h1 className="text-xl font-bold text-[#222] mb-4">{entry.question}</h1>
 
         <MarkdownContent content={entry.answer} />
 
         {entry.source_transcript_excerpt && (
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
+          <div className="mt-6 pt-4 border-t border-[#F0EFED]">
+            <p className="section-heading mb-2">
               Source Transcript
             </p>
-            <blockquote className="text-sm text-gray-500 italic border-l-2 border-gray-200 pl-3">
+            <blockquote className="text-sm text-[#222]/60 italic border-l-2 border-[#5BB8D6] pl-3">
               {entry.source_transcript_excerpt}
             </blockquote>
           </div>
         )}
 
         {entry.review_status === 'approved' && (
-          <div className="mt-6 pt-4 border-t border-gray-100">
+          <div className="mt-6 pt-4 border-t border-[#F0EFED]">
             <ContributePanel faqEntryId={entry.id} faqQuestion={entry.question} />
           </div>
         )}
 
-        <div className="mt-6 pt-4 border-t border-gray-100 space-y-4">
+        <div className="mt-6 pt-4 border-t border-[#F0EFED] space-y-4">
           <CategoryAssigner
             faqEntryId={entry.id}
             currentCategories={entry.categories || []}
@@ -117,7 +117,7 @@ export default function FaqDetailPage() {
           />
         </div>
 
-        <p className="text-xs text-gray-400 mt-4">
+        <p className="text-xs text-[#222]/40 mt-4">
           Added {new Date(entry.created_at).toLocaleDateString()}
         </p>
       </div>

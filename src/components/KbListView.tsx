@@ -1,11 +1,33 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import SearchBar from '@/components/SearchBar';
 import CategoryFilter from '@/components/CategoryFilter';
 import TagFilter from '@/components/TagFilter';
 import FaqCard from '@/components/FaqCard';
 import type { FaqEntry, Category, Tag } from '@/types';
+
+// Group FAQs by their first category, with "Uncategorized" as fallback
+function groupByCategory(faqs: FaqEntry[]): { category: string; entries: FaqEntry[] }[] {
+  const groups = new Map<string, FaqEntry[]>();
+
+  for (const faq of faqs) {
+    const catName = faq.categories && faq.categories.length > 0
+      ? faq.categories[0].name
+      : 'Uncategorized';
+    if (!groups.has(catName)) groups.set(catName, []);
+    groups.get(catName)!.push(faq);
+  }
+
+  // Sort groups alphabetically, but put "Uncategorized" last
+  return Array.from(groups.entries())
+    .sort(([a], [b]) => {
+      if (a === 'Uncategorized') return 1;
+      if (b === 'Uncategorized') return -1;
+      return a.localeCompare(b);
+    })
+    .map(([category, entries]) => ({ category, entries }));
+}
 
 export default function KbListView() {
   const [faqs, setFaqs] = useState<FaqEntry[]>([]);
@@ -61,19 +83,29 @@ export default function KbListView() {
   const handleTagSelect = useCallback((id: string | null) => setSelectedTag(id), []);
   const handleSearch = useCallback((q: string) => setSearchQuery(q), []);
 
+  // Group when showing all (no category filter and no search)
+  const shouldGroup = !selectedCategory && !searchQuery;
+  const grouped = useMemo(
+    () => shouldGroup ? groupByCategory(faqs) : [],
+    [faqs, shouldGroup]
+  );
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Knowledge Base</h1>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="section-heading text-base">Knowledge Base</h1>
+          <p className="text-sm text-[#222]/40 mt-1">{faqs.length} articles</p>
+        </div>
         <a
           href="/api/export"
-          className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 transition-colors"
+          className="px-3 py-1.5 border border-[#F0EFED] text-[#222]/60 rounded-[4px] text-xs uppercase tracking-wider hover:border-[#5BB8D6]/40 hover:text-[#5BB8D6] transition-colors"
         >
-          Export as MD
+          Export
         </a>
       </div>
 
-      <div className="space-y-4 mb-6">
+      <div className="space-y-3 mb-8">
         <SearchBar
           onSearch={handleSearch}
           placeholder="Search the knowledge base..."
@@ -95,30 +127,48 @@ export default function KbListView() {
       </div>
 
       {error ? (
-        <div className="text-center py-12">
-          <p className="text-red-600 mb-2">{error}</p>
+        <div className="text-center py-16">
+          <p className="text-[#D4705A] mb-2">{error}</p>
           <button
             onClick={fetchFaqs}
-            className="text-blue-600 hover:underline text-sm"
+            className="text-[#5BB8D6] hover:underline text-sm"
           >
             Try again
           </button>
         </div>
       ) : loading ? (
-        <p className="text-gray-500 text-center py-12">Loading...</p>
+        <p className="text-[#222]/40 text-center py-16">Loading...</p>
       ) : faqs.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-16 text-[#222]/40">
           <p>{searchQuery ? 'No results found.' : 'No FAQ entries yet.'}</p>
           {!searchQuery && (
             <a
               href="/submit"
-              className="text-blue-600 hover:underline mt-2 inline-block"
+              className="text-[#D4705A] hover:underline mt-2 inline-block"
             >
               Contribute a voice note to get started
             </a>
           )}
         </div>
+      ) : shouldGroup ? (
+        // Grouped view — articles organized under category headings
+        <div className="space-y-10">
+          {grouped.map((group) => (
+            <section key={group.category}>
+              <h2 className="text-xs font-medium uppercase tracking-[0.15em] text-[#222]/40 mb-4 pb-2 border-b border-[#F0EFED]">
+                {group.category}
+                <span className="ml-2 text-[#222]/20">{group.entries.length}</span>
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                {group.entries.map((faq) => (
+                  <FaqCard key={faq.id} entry={faq} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       ) : (
+        // Flat view — when searching or filtering by category
         <div className="grid gap-4 md:grid-cols-2">
           {faqs.map((faq) => (
             <FaqCard key={faq.id} entry={faq} />

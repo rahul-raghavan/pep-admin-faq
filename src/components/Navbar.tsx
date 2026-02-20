@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase-browser';
 import { useRouter } from 'next/navigation';
 
 const primaryLinks = [
-  { href: '/', label: 'Knowledge Base' },
+  { href: '/', label: 'KB' },
 ];
 
 const secondaryLinks = [
@@ -28,6 +28,9 @@ function isLinkActive(href: string, pathname: string) {
   return pathname === href;
 }
 
+const activeCls = 'text-[#5BB8D6] border-b-2 border-[#5BB8D6]';
+const inactiveCls = 'text-[#222]/70 hover:text-[#5BB8D6] border-b-2 border-transparent';
+
 export default function Navbar({ userEmail, isAdmin }: { userEmail: string; isAdmin: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -46,38 +49,34 @@ export default function Navbar({ userEmail, isAdmin }: { userEmail: string; isAd
   ];
 
   return (
-    <nav className="bg-white border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-14">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="font-bold text-lg text-gray-900">
-              PEP Admin FAQs
+    <nav className="bg-white border-b border-[#F0EFED]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-12 items-center">
+          <div className="flex items-center gap-5">
+            <Link href="/" className="font-medium text-[#222] tracking-wide whitespace-nowrap">
+              PEP FAQs
             </Link>
-            <div className="hidden sm:flex items-center gap-1">
+            <div className="hidden sm:flex items-center">
               {primaryLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isLinkActive(link.href, pathname)
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                  className={`px-2.5 py-1 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                    isLinkActive(link.href, pathname) ? activeCls : inactiveCls
                   }`}
                 >
                   {link.label}
                 </Link>
               ))}
 
-              <span className="mx-1 text-gray-200">|</span>
+              <span className="mx-1.5 text-[#F0EFED]">|</span>
 
               {secondaryLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-2 rounded-md text-sm transition-colors ${
-                    isLinkActive(link.href, pathname)
-                      ? 'bg-gray-100 text-gray-700'
-                      : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
+                  className={`px-2.5 py-1 text-[13px] whitespace-nowrap transition-colors ${
+                    isLinkActive(link.href, pathname) ? activeCls : inactiveCls
                   }`}
                 >
                   {link.label}
@@ -86,15 +85,13 @@ export default function Navbar({ userEmail, isAdmin }: { userEmail: string; isAd
 
               {isAdmin && (
                 <>
-                  <span className="mx-1 text-gray-200">|</span>
+                  <span className="mx-1.5 text-[#F0EFED]">|</span>
                   {adminLinks.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                        isLinkActive(link.href, pathname)
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                      className={`px-2.5 py-1 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                        isLinkActive(link.href, pathname) ? activeCls : inactiveCls
                       }`}
                     >
                       {link.label}
@@ -104,11 +101,11 @@ export default function Navbar({ userEmail, isAdmin }: { userEmail: string; isAd
               )}
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-500 hidden sm:block">{userEmail}</span>
+          <div className="flex items-center gap-3 whitespace-nowrap">
+            <span className="text-xs text-[#222]/40 hidden lg:block">{userEmail}</span>
             <button
               onClick={handleLogout}
-              className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+              className="text-xs text-[#D4705A] hover:text-[#D4705A]/80 transition-colors cursor-pointer"
             >
               Sign out
             </button>
@@ -120,10 +117,10 @@ export default function Navbar({ userEmail, isAdmin }: { userEmail: string; isAd
             <Link
               key={link.href}
               href={link.href}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap ${
+              className={`px-2.5 py-1 text-[13px] font-medium whitespace-nowrap transition-colors ${
                 isLinkActive(link.href, pathname)
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-500'
+                  ? 'text-[#5BB8D6] border-b-2 border-[#5BB8D6]'
+                  : 'text-[#222]/70 border-b-2 border-transparent'
               }`}
             >
               {link.label}

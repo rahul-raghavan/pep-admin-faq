@@ -81,35 +81,35 @@ export default function SubmitPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Contribute</h1>
+      <h1 className="section-heading text-base mb-6">Contribute</h1>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Upload Files</h2>
+        <div className="bg-white rounded-[4px] border border-[#F0EFED] p-6">
+          <h2 className="text-lg font-medium text-[#222] mb-4">Upload Files</h2>
           <FileUploader onFilesSelected={handleFilesSelected} multiple={true} />
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Record Audio</h2>
+        <div className="bg-white rounded-[4px] border border-[#F0EFED] p-6">
+          <h2 className="text-lg font-medium text-[#222] mb-4">Record Audio</h2>
           <AudioRecorder onRecordingComplete={handleRecordingComplete} />
         </div>
 
         {uploads.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Upload Progress</h2>
+          <div className="bg-white rounded-[4px] border border-[#F0EFED] p-6">
+            <h2 className="text-lg font-medium text-[#222] mb-4">Upload Progress</h2>
             <ul className="space-y-2">
               {uploads.map((u, i) => (
                 <li key={i} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700 truncate mr-4">{u.fileName}</span>
+                  <span className="text-[#222] truncate mr-4">{u.fileName}</span>
                   <span
                     className={
                       u.status === 'done'
-                        ? 'text-green-600'
+                        ? 'text-[#5BB8D6]'
                         : u.status === 'error'
-                        ? 'text-red-600'
+                        ? 'text-[#D4705A]'
                         : u.status === 'uploading'
-                        ? 'text-blue-600'
-                        : 'text-gray-400'
+                        ? 'text-[#5BB8D6]'
+                        : 'text-[#222]/40'
                     }
                   >
                     {u.status === 'done'
@@ -127,7 +127,7 @@ export default function SubmitPage() {
             {!isUploading && uploads.every((u) => u.status === 'done') && (
               <button
                 onClick={() => router.push('/submissions')}
-                className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
+                className="mt-4 px-4 py-2 bg-[#5BB8D6] text-white rounded-[4px] uppercase text-sm tracking-wider hover:bg-[#5BB8D6]/90 transition-colors cursor-pointer"
               >
                 Go to Submissions
               </button>

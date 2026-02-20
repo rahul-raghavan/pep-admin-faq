@@ -60,21 +60,21 @@ export default function ContributePanel({ faqEntryId, faqQuestion }: ContributeP
 
   if (state === 'done') {
     return (
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-        <p className="text-green-800 font-medium">Submitted for review!</p>
-        <p className="text-green-700 text-sm mt-1">{message}</p>
+      <div className="bg-[#5BB8D6]/10 border border-[#5BB8D6]/30 rounded-[4px] p-4">
+        <p className="text-[#222] font-medium">Submitted for review!</p>
+        <p className="text-[#222]/70 text-sm mt-1">{message}</p>
       </div>
     );
   }
 
   if (state === 'error') {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800 font-medium">Something went wrong</p>
-        <p className="text-red-700 text-sm mt-1">{message}</p>
+      <div className="bg-[#D4705A]/10 border border-[#D4705A]/30 rounded-[4px] p-4">
+        <p className="text-[#222] font-medium">Something went wrong</p>
+        <p className="text-[#D4705A] text-sm mt-1">{message}</p>
         <button
           onClick={() => { setState('idle'); setExpanded(false); setMessage(''); }}
-          className="mt-2 text-sm text-red-600 hover:text-red-800 underline cursor-pointer"
+          className="mt-2 text-sm text-[#D4705A] hover:text-[#D4705A]/80 underline cursor-pointer"
         >
           Try again
         </button>
@@ -84,12 +84,12 @@ export default function ContributePanel({ faqEntryId, faqQuestion }: ContributeP
 
   if (state === 'uploading' || state === 'processing') {
     return (
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-blue-800 font-medium flex items-center gap-2">
-          <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
+      <div className="bg-[#5BB8D6]/10 border border-[#5BB8D6]/30 rounded-[4px] p-4">
+        <p className="text-[#222] font-medium flex items-center gap-2">
+          <span className="w-2 h-2 bg-[#5BB8D6] rounded-full animate-pulse" />
           {state === 'uploading' ? 'Uploading recording...' : 'Processing contribution...'}
         </p>
-        <p className="text-blue-700 text-sm mt-1">
+        <p className="text-[#222]/70 text-sm mt-1">
           {state === 'processing'
             ? 'Transcribing audio and merging with existing answer. This may take a minute.'
             : 'Uploading your recording...'}
@@ -102,7 +102,7 @@ export default function ContributePanel({ faqEntryId, faqQuestion }: ContributeP
     return (
       <button
         onClick={() => setExpanded(true)}
-        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium cursor-pointer"
+        className="px-4 py-2 bg-[#F0EFED] text-[#222] rounded-[4px] hover:bg-[#5BB8D6]/10 transition-colors text-sm font-medium cursor-pointer"
       >
         Contribute to this answer
       </button>
@@ -110,19 +110,19 @@ export default function ContributePanel({ faqEntryId, faqQuestion }: ContributeP
   }
 
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+    <div className="bg-[#F0EFED]/50 border border-[#F0EFED] rounded-[4px] p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-medium text-gray-700">
+        <p className="text-sm font-medium text-[#222]">
           Record your contribution
         </p>
         <button
           onClick={() => setExpanded(false)}
-          className="text-sm text-gray-400 hover:text-gray-600 cursor-pointer"
+          className="text-sm text-[#222]/40 hover:text-[#222]/60 cursor-pointer"
         >
           Cancel
         </button>
       </div>
-      <p className="text-xs text-gray-500 mb-3">
+      <p className="text-xs text-[#222]/60 mb-3">
         Record additional information or updates for: &ldquo;{faqQuestion}&rdquo;
       </p>
       <AudioRecorder onRecordingComplete={handleRecordingComplete} />

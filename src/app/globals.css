@@ -3,7 +3,48 @@
 
 @theme inline {
   --color-background: #ffffff;
-  --color-foreground: #171717;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-foreground: #222222;
+  --color-pep-blue: #5BB8D6;
+  --color-pep-coral: #D4705A;
+  --color-charcoal: #222222;
+  --color-light-gray: #F0EFED;
+  --color-pep-blue-light: #5BB8D620;
+  --color-pep-coral-light: #D4705A15;
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-dm-mono);
+}
+
+/* Section heading utility */
+.section-heading {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #5BB8D6;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out both;
+}
+
+/* Focus ring override */
+*:focus-visible {
+  outline-color: #5BB8D6;
+}
+
+/* Prose customizations for markdown */
+.prose a {
+  color: #D4705A;
+  text-decoration: none;
+}
+.prose a:hover {
+  text-decoration: underline;
+}
+.prose blockquote {
+  border-left-color: #5BB8D6;
 }
