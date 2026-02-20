@@ -36,6 +36,9 @@ export async function POST(request: Request) {
     );
   }
 
+  // Detect source type from MIME type
+  const sourceType = file.type === 'application/pdf' ? 'pdf' : 'audio';
+
   // Create DB row
   const { data: voiceNote, error: dbError } = await serviceClient
     .from('adminpkm_voice_notes')
@@ -44,6 +47,7 @@ export async function POST(request: Request) {
       user_email: user.email,
       file_path: filePath,
       file_name: file.name,
+      source_type: sourceType,
       status: 'uploaded',
     })
     .select()

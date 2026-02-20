@@ -5,6 +5,7 @@ export interface VoiceNote {
   file_path: string;
   file_name: string;
   duration_seconds: number | null;
+  source_type: 'audio' | 'pdf';
   status: 'uploaded' | 'transcribing' | 'transcribed' | 'processing' | 'completed' | 'error';
   error_message: string | null;
   transcript: string | null;
@@ -48,7 +49,7 @@ export interface FaqEntry {
   source_transcript_excerpt: string | null;
   is_merged: boolean;
   merged_from_id: string | null;
-  review_status: 'approved' | 'needs_review';
+  review_status: 'approved' | 'needs_review' | 'pending_new' | 'pending_merge';
   conflicting_answer: string | null;
   conflicting_source_voice_note_id: string | null;
   conflicting_transcript_excerpt: string | null;

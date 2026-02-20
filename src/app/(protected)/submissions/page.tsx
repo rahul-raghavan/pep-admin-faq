@@ -13,10 +13,16 @@ const statusColors: Record<string, string> = {
   error: 'bg-[#D4705A]/10 text-[#D4705A]',
 };
 
+interface ProcessingResult {
+  summary: string;
+  faqsQueued: number;
+}
+
 export default function SubmissionsPage() {
   const [notes, setNotes] = useState<VoiceNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [processingResults, setProcessingResults] = useState<Record<string, ProcessingResult>>({});
 
   const fetchNotes = useCallback(async () => {
     const res = await fetch('/api/voice-notes');
@@ -28,7 +34,6 @@ export default function SubmissionsPage() {
 
   useEffect(() => {
     fetchNotes();
-    // Poll every 5 seconds when something is in progress
     const interval = setInterval(fetchNotes, 5000);
     return () => clearInterval(interval);
   }, [fetchNotes]);
@@ -41,7 +46,15 @@ export default function SubmissionsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ voiceNoteId: noteId }),
       });
-      if (!res.ok) {
+      if (res.ok) {
+        const data = await res.json();
+        if (data.faqsQueued !== undefined) {
+          setProcessingResults((prev) => ({
+            ...prev,
+            [noteId]: { summary: data.summary, faqsQueued: data.faqsQueued },
+          }));
+        }
+      } else {
         const data = await res.json();
         alert(`Processing failed: ${data.error}`);
       }
@@ -84,50 +97,75 @@ export default function SubmissionsPage() {
 
       {notes.length === 0 ? (
         <div className="text-center py-12 text-[#222]/50">
-          <p>No voice notes yet.</p>
+          <p>No submissions yet.</p>
           <a href="/submit" className="text-[#D4705A] hover:underline mt-2 inline-block">
-            Submit your first voice note
+            Submit your first voice note or PDF
           </a>
         </div>
       ) : (
         <div className="bg-white rounded-[4px] border border-[#F0EFED] divide-y divide-[#F0EFED]">
-          {notes.map((note) => (
-            <div key={note.id} className="p-4 flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-[#222] truncate">
-                  {note.file_name}
-                </p>
-                <p className="text-xs text-[#222]/50 mt-0.5">
-                  {new Date(note.created_at).toLocaleString()}
-                  {note.error_message && note.status === 'error' && (
-                    <span className="text-[#D4705A] ml-2">{note.error_message}</span>
-                  )}
-                </p>
-              </div>
-              <div className="flex items-center gap-3 ml-4">
-                {['transcribing', 'transcribed', 'processing'].includes(note.status) ? (
-                  <ProcessingStatus status={note.status} />
-                ) : (
-                  <span
-                    className={`px-2 py-1 rounded-[4px] text-xs font-medium ${
-                      statusColors[note.status] || 'bg-[#F0EFED] text-[#222]'
-                    }`}
-                  >
-                    {note.status}
-                  </span>
+          {notes.map((note) => {
+            const result = processingResults[note.id];
+            return (
+              <div key={note.id} className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-[#222] truncate">
+                        {note.file_name}
+                      </p>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-[4px] text-[10px] font-medium uppercase tracking-wider ${
+                          note.source_type === 'pdf'
+                            ? 'bg-[#D4705A]/10 text-[#D4705A]'
+                            : 'bg-[#5BB8D6]/10 text-[#5BB8D6]'
+                        }`}
+                      >
+                        {note.source_type === 'pdf' ? 'PDF' : 'Audio'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#222]/50 mt-0.5">
+                      {note.user_email && (
+                        <span className="mr-2">{note.user_email}</span>
+                      )}
+                      {new Date(note.created_at).toLocaleString()}
+                      {note.error_message && note.status === 'error' && (
+                        <span className="text-[#D4705A] ml-2">{note.error_message}</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 ml-4">
+                    {['transcribing', 'transcribed', 'processing'].includes(note.status) ? (
+                      <ProcessingStatus status={note.status} />
+                    ) : (
+                      <span
+                        className={`px-2 py-1 rounded-[4px] text-xs font-medium ${
+                          statusColors[note.status] || 'bg-[#F0EFED] text-[#222]'
+                        }`}
+                      >
+                        {note.status}
+                      </span>
+                    )}
+                    {(note.status === 'uploaded' || note.status === 'error') && (
+                      <button
+                        onClick={() => handleProcess(note.id)}
+                        disabled={processingId !== null}
+                        className="px-3 py-1.5 text-sm bg-[#5BB8D6] text-white rounded-[4px] hover:bg-[#5BB8D6]/90 disabled:opacity-50 cursor-pointer"
+                      >
+                        {processingId === note.id ? 'Processing...' : note.status === 'error' ? 'Retry' : 'Process'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {result && (
+                  <p className="text-sm text-[#5BB8D6] mt-2">
+                    {result.faqsQueued} FAQ{result.faqsQueued !== 1 ? 's' : ''} sent for review
+                    {result.summary && <span className="text-[#222]/50 ml-2">— {result.summary}</span>}
+                  </p>
                 )}
-                {(note.status === 'uploaded' || note.status === 'error') && (
-                  <button
-                    onClick={() => handleProcess(note.id)}
-                    disabled={processingId !== null}
-                    className="px-3 py-1.5 text-sm bg-[#5BB8D6] text-white rounded-[4px] hover:bg-[#5BB8D6]/90 disabled:opacity-50 cursor-pointer"
-                  >
-                    {processingId === note.id ? 'Processing...' : note.status === 'error' ? 'Retry' : 'Process'}
-                  </button>
-                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

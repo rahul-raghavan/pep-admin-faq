@@ -1,7 +1,9 @@
 export function buildFaqExtractionPrompt(
   transcript: string,
-  existingCategories: { name: string; description: string | null }[]
+  existingCategories: { name: string; description: string | null }[],
+  sourceType: 'audio' | 'pdf' = 'audio'
 ): string {
+  const sourceLabel = sourceType === 'pdf' ? 'document' : 'voice note transcript';
   const categoryList =
     existingCategories.length > 0
       ? existingCategories
@@ -11,12 +13,12 @@ export function buildFaqExtractionPrompt(
 
   return `You are an expert at extracting structured knowledge from conversational transcripts of school administrators.
 
-Given the following voice note transcript from a school center manager, extract FAQ-style entries. Each entry should be a clear question and a comprehensive answer that captures the operational knowledge shared.
+Given the following ${sourceLabel} from a school center manager, extract FAQ-style entries. Each entry should be a clear question and a comprehensive answer that captures the operational knowledge shared.
 
 EXISTING CATEGORIES:
 ${categoryList}
 
-TRANSCRIPT:
+SOURCE TEXT:
 ${transcript}
 
 INSTRUCTIONS:
@@ -24,7 +26,7 @@ INSTRUCTIONS:
 2. Write questions as someone searching for this info would phrase them.
 3. Write answers in clear, professional language — clean up any verbal filler, repetition, or conversational artifacts from the transcript.
 4. Assign each FAQ to an existing category if one fits, or propose a new category.
-5. Include a brief excerpt from the transcript that the FAQ was derived from.
+5. Include a brief excerpt from the source text that the FAQ was derived from.
 
 Respond with valid JSON only, no markdown fences:
 {
@@ -33,7 +35,7 @@ Respond with valid JSON only, no markdown fences:
       "question": "How do we handle X?",
       "answer": "Clear, complete answer...",
       "category": "Category Name",
-      "transcript_excerpt": "relevant part of transcript..."
+      "transcript_excerpt": "relevant part of source text..."
     }
   ],
   "new_categories": [
@@ -42,7 +44,7 @@ Respond with valid JSON only, no markdown fences:
       "description": "Brief description of what this category covers"
     }
   ],
-  "summary": "One-sentence summary of what this voice note covered"
+  "summary": "One-sentence summary of what this ${sourceLabel} covered"
 }`;
 }
 

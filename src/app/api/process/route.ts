@@ -2,6 +2,7 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase-server';
 import { getAnthropicClient } from '@/lib/anthropic';
 import { buildFaqExtractionPrompt, buildDeduplicationPrompt } from '@/lib/prompts';
 import { transcribeVoiceNote } from '@/lib/transcribe';
+import { extractPdfText } from '@/lib/pdf';
 import { NextResponse } from 'next/server';
 import type { ExtractedFaq, DeduplicationResult } from '@/types';
 
@@ -41,8 +42,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    // === STEP 1: Transcription (skip if already transcribed) ===
-    const transcript = await transcribeVoiceNote(db, voiceNote);
+    // === STEP 1: Transcription / PDF extraction (skip if already done) ===
+    const transcript = voiceNote.source_type === 'pdf'
+      ? await extractPdfText(db, voiceNote)
+      : await transcribeVoiceNote(db, voiceNote);
 
     // === STEP 2: FAQ Extraction ===
     await db
@@ -59,7 +62,8 @@ export async function POST(request: Request) {
     const anthropic = getAnthropicClient();
     const extractionPrompt = buildFaqExtractionPrompt(
       transcript,
-      existingCategories || []
+      existingCategories || [],
+      voiceNote.source_type || 'audio'
     );
 
     const extractionResponse = await anthropic.messages.create({
@@ -138,7 +142,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // === STEP 4: Deduplicate and insert FAQs ===
+    // === STEP 4: Deduplicate and insert FAQs (all go to review queue) ===
+    let faqsQueued = 0;
+
     for (const faq of extractionData.faqs as ExtractedFaq[]) {
       const categoryId = categoryMap[faq.category] || null;
 
@@ -173,7 +179,7 @@ export async function POST(request: Request) {
           messages: [{ role: 'user', content: dedupPrompt }],
         });
 
-        let dedupText =
+        const dedupText =
           dedupResponse.content[0].type === 'text'
             ? dedupResponse.content[0].text
             : '';
@@ -187,11 +193,13 @@ export async function POST(request: Request) {
       }
 
       if (action.action === 'add') {
+        // Insert as pending_new — requires admin approval
         const { data: inserted } = await db.from('adminpkm_faq_entries').insert({
           question: faq.question,
           answer: faq.answer,
           source_voice_note_id: voiceNoteId,
           source_transcript_excerpt: faq.transcript_excerpt,
+          review_status: 'pending_new',
         }).select('id').single();
 
         if (inserted && categoryId) {
@@ -200,29 +208,21 @@ export async function POST(request: Request) {
             category_id: categoryId,
           });
         }
+        faqsQueued++;
       } else if (action.action === 'merge' && action.merge_into_id) {
+        // Flag existing entry for merge review instead of auto-merging
         await db
           .from('adminpkm_faq_entries')
-          .update({ answer: action.merged_answer })
+          .update({
+            review_status: 'pending_merge',
+            conflicting_answer: action.merged_answer,
+            conflicting_source_voice_note_id: voiceNoteId,
+            conflicting_transcript_excerpt: faq.transcript_excerpt,
+          })
           .eq('id', action.merge_into_id);
-
-        const { data: inserted } = await db.from('adminpkm_faq_entries').insert({
-          question: faq.question,
-          answer: faq.answer,
-          source_voice_note_id: voiceNoteId,
-          source_transcript_excerpt: faq.transcript_excerpt,
-          is_merged: true,
-          merged_from_id: action.merge_into_id,
-        }).select('id').single();
-
-        if (inserted && categoryId) {
-          await db.from('adminpkm_faq_entry_categories').insert({
-            faq_entry_id: inserted.id,
-            category_id: categoryId,
-          });
-        }
+        faqsQueued++;
       } else if (action.action === 'conflict' && action.merge_into_id) {
-        // Pull the existing entry from the KB and flag for review
+        // Flag for conflict review (unchanged behavior)
         await db
           .from('adminpkm_faq_entries')
           .update({
@@ -232,6 +232,7 @@ export async function POST(request: Request) {
             conflicting_transcript_excerpt: faq.transcript_excerpt,
           })
           .eq('id', action.merge_into_id);
+        faqsQueued++;
       }
       // skip: do nothing
     }
@@ -242,7 +243,7 @@ export async function POST(request: Request) {
       .update({ status: 'completed', error_message: null })
       .eq('id', voiceNoteId);
 
-    return NextResponse.json({ success: true, summary: extractionData.summary });
+    return NextResponse.json({ success: true, summary: extractionData.summary, faqsQueued });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
     await db

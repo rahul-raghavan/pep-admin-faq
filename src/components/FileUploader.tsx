@@ -26,6 +26,7 @@ export default function FileUploader({ onFilesSelected, multiple = true }: FileU
       'audio/mpeg': ['.mp3'],
       'audio/webm': ['.webm'],
       'audio/wav': ['.wav'],
+      'application/pdf': ['.pdf'],
     },
     multiple,
   });
@@ -42,11 +43,11 @@ export default function FileUploader({ onFilesSelected, multiple = true }: FileU
       <input {...getInputProps()} />
       <p className="text-[#222]/70">
         {isDragActive
-          ? 'Drop audio files here...'
-          : 'Drag & drop audio files here, or click to select'}
+          ? 'Drop files here...'
+          : 'Drag & drop audio or PDF files here, or click to select'}
       </p>
       <p className="text-sm text-[#222]/40 mt-1">
-        Supports M4A, MP3, WebM, WAV{multiple ? ' (multiple files OK)' : ''}
+        Supports M4A, MP3, WebM, WAV, PDF{multiple ? ' (multiple files OK)' : ''}
       </p>
     </div>
   );
