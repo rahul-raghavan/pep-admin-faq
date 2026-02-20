@@ -10,7 +10,9 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data, error } = await supabase
+  // Use service role client for reads — auth is already verified above
+  const db = createServiceRoleClient();
+  const { data, error } = await db
     .from('adminpkm_tags')
     .select('*')
     .order('name');

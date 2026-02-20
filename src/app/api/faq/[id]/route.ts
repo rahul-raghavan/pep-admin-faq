@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -13,7 +13,9 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data, error } = await supabase
+  // Use service role client for reads — auth is already verified above
+  const db = createServiceRoleClient();
+  const { data, error } = await db
     .from('adminpkm_faq_entries')
     .select('*, categories:adminpkm_faq_entry_categories(category:adminpkm_categories(*)), tags:adminpkm_faq_entry_tags(tag:adminpkm_tags(*))')
     .eq('id', id)

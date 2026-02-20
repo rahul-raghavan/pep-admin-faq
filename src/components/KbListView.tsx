@@ -15,6 +15,7 @@ export default function KbListView() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch categories and tags once on mount — they rarely change
   useEffect(() => {
@@ -24,19 +25,30 @@ export default function KbListView() {
     ]).then(([cats, tgs]) => {
       setCategories(cats);
       setTags(tgs);
-    });
+    }).catch((err) => console.error('Failed to load filters:', err));
   }, []);
 
   // Fetch FAQs when filters change
   const fetchFaqs = useCallback(async () => {
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams();
     if (searchQuery) params.set('search', searchQuery);
     if (selectedCategory) params.set('category', selectedCategory);
     if (selectedTag) params.set('tag', selectedTag);
 
-    const res = await fetch(`/api/faq?${params}`);
-    if (res.ok) setFaqs(await res.json());
+    try {
+      const res = await fetch(`/api/faq?${params}`);
+      if (res.ok) {
+        setFaqs(await res.json());
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error || `Failed to load (${res.status})`);
+      }
+    } catch (err) {
+      setError('Network error — please check your connection and try again.');
+      console.error('FAQ fetch error:', err);
+    }
     setLoading(false);
   }, [searchQuery, selectedCategory, selectedTag]);
 
@@ -82,7 +94,17 @@ export default function KbListView() {
         )}
       </div>
 
-      {loading ? (
+      {error ? (
+        <div className="text-center py-12">
+          <p className="text-red-600 mb-2">{error}</p>
+          <button
+            onClick={fetchFaqs}
+            className="text-blue-600 hover:underline text-sm"
+          >
+            Try again
+          </button>
+        </div>
+      ) : loading ? (
         <p className="text-gray-500 text-center py-12">Loading...</p>
       ) : faqs.length === 0 ? (
         <div className="text-center py-12 text-gray-500">

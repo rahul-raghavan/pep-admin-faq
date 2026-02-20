@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -9,6 +9,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Use service role client for reads — auth is already verified above,
+  // and the user-scoped client can fail due to JWT refresh timing issues
+  const db = createServiceRoleClient();
+
   const { searchParams } = new URL(request.url);
   const search = searchParams.get('search');
   const categoryId = searchParams.get('category');
@@ -17,7 +21,7 @@ export async function GET(request: Request) {
   // If filtering by category, get matching FAQ IDs first (two-step query)
   let categoryFaqIds: string[] | null = null;
   if (categoryId) {
-    const { data: links } = await supabase
+    const { data: links } = await db
       .from('adminpkm_faq_entry_categories')
       .select('faq_entry_id')
       .eq('category_id', categoryId);
@@ -30,7 +34,7 @@ export async function GET(request: Request) {
   // If filtering by tag, get matching FAQ IDs first (two-step query)
   let tagFaqIds: string[] | null = null;
   if (tagId) {
-    const { data: links } = await supabase
+    const { data: links } = await db
       .from('adminpkm_faq_entry_tags')
       .select('faq_entry_id')
       .eq('tag_id', tagId);
@@ -52,7 +56,7 @@ export async function GET(request: Request) {
     filterIds = tagFaqIds;
   }
 
-  let query = supabase
+  let query = db
     .from('adminpkm_faq_entries')
     .select('*, categories:adminpkm_faq_entry_categories(category:adminpkm_categories(*)), tags:adminpkm_faq_entry_tags(tag:adminpkm_tags(*))')
     .eq('is_merged', false)
