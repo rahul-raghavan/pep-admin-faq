@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import MarkdownContent from '@/components/MarkdownContent';
@@ -14,16 +14,19 @@ export default function FaqDetailPage() {
   const [entry, setEntry] = useState<FaqEntry | null>(null);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchEntry = () => {
+  const refreshEntry = useCallback(() => {
     fetch(`/api/faq/${id}`)
-      .then((res) => (res.ok ? res.json() : null))
+      .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        setEntry(data);
-        setLoading(false);
+        if (data) {
+          setEntry(data);
+          setIsAdmin(!!data.isAdmin);
+        }
       });
-  };
+  }, [id]);
 
   // Fetch entry + reference data in parallel on mount
   useEffect(() => {
@@ -33,6 +36,7 @@ export default function FaqDetailPage() {
       fetch('/api/tags').then((r) => r.ok ? r.json() : []),
     ]).then(([entryData, cats, tgs]) => {
       setEntry(entryData);
+      setIsAdmin(!!entryData?.isAdmin);
       setAllCategories(cats);
       setAllTags(tgs);
       setLoading(false);
@@ -102,20 +106,22 @@ export default function FaqDetailPage() {
           </div>
         )}
 
-        <div className="mt-6 pt-4 border-t border-[#F0EFED] space-y-4">
-          <CategoryAssigner
-            faqEntryId={entry.id}
-            currentCategories={entry.categories || []}
-            allCategories={allCategories}
-            onUpdate={fetchEntry}
-          />
-          <TagAssigner
-            faqEntryId={entry.id}
-            currentTags={entry.tags || []}
-            allTags={allTags}
-            onUpdate={fetchEntry}
-          />
-        </div>
+        {isAdmin && (
+          <div className="mt-6 pt-4 border-t border-[#F0EFED] space-y-4">
+            <CategoryAssigner
+              faqEntryId={entry.id}
+              currentCategories={entry.categories || []}
+              allCategories={allCategories}
+              onUpdate={refreshEntry}
+            />
+            <TagAssigner
+              faqEntryId={entry.id}
+              currentTags={entry.tags || []}
+              allTags={allTags}
+              onUpdate={refreshEntry}
+            />
+          </div>
+        )}
 
         <p className="text-xs text-[#222]/40 mt-4">
           Added {new Date(entry.created_at).toLocaleDateString()}

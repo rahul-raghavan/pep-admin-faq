@@ -16,6 +16,7 @@ export default function ReviewPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [submitting, setSubmitting] = useState<string | null>(null);
+  const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
 
   const fetchEntries = async () => {
     const res = await fetch('/api/review');
@@ -36,6 +37,12 @@ export default function ReviewPage() {
 
   const handleAction = async (entryId: string, action: string, editedAnswer?: string) => {
     setSubmitting(entryId);
+    setActionErrors((prev) => {
+      const next = { ...prev };
+      delete next[entryId];
+      return next;
+    });
+
     const res = await fetch('/api/review', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -45,6 +52,20 @@ export default function ReviewPage() {
     if (res.ok) {
       setEntries((prev) => prev.filter((e) => e.id !== entryId));
       setEditingId(null);
+    } else {
+      let errorMsg = 'Something went wrong. Please try again.';
+      const contentType = res.headers.get('Content-Type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          const data = await res.json();
+          errorMsg = data.error || errorMsg;
+        } catch { /* use default */ }
+      } else {
+        try {
+          errorMsg = await res.text() || errorMsg;
+        } catch { /* use default */ }
+      }
+      setActionErrors((prev) => ({ ...prev, [entryId]: errorMsg }));
     }
     setSubmitting(null);
   };
@@ -63,6 +84,16 @@ export default function ReviewPage() {
 
   const sourceLabel = (type: 'audio' | 'pdf') =>
     type === 'pdf' ? 'PDF' : 'voice note';
+
+  const ErrorBanner = ({ entryId }: { entryId: string }) => {
+    const error = actionErrors[entryId];
+    if (!error) return null;
+    return (
+      <p className="text-sm text-[#D4705A] bg-[#D4705A]/10 rounded-[4px] px-3 py-2 mt-3">
+        {error}
+      </p>
+    );
+  };
 
   return (
     <div>
@@ -176,6 +207,7 @@ export default function ReviewPage() {
                       </button>
                     </div>
                   )}
+                  <ErrorBanner entryId={entry.id} />
                 </div>
               );
             }
@@ -286,11 +318,12 @@ export default function ReviewPage() {
                       </button>
                     </div>
                   )}
+                  <ErrorBanner entryId={entry.id} />
                 </div>
               );
             }
 
-            // --- NEEDS REVIEW (conflict): coral border (existing behavior + attribution) ---
+            // --- NEEDS REVIEW (conflict): coral border ---
             return (
               <div
                 key={entry.id}
@@ -397,6 +430,7 @@ export default function ReviewPage() {
                     </button>
                   </div>
                 )}
+                <ErrorBanner entryId={entry.id} />
               </div>
             );
           })}

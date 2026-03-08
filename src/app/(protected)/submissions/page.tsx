@@ -34,9 +34,17 @@ export default function SubmissionsPage() {
 
   useEffect(() => {
     fetchNotes();
-    const interval = setInterval(fetchNotes, 5000);
+    const interval = setInterval(() => {
+      // Only poll while there are notes still being processed
+      const hasActive = notes.some((n) =>
+        ['uploaded', 'transcribing', 'transcribed', 'processing'].includes(n.status)
+      );
+      if (hasActive) {
+        fetchNotes();
+      }
+    }, 15000);
     return () => clearInterval(interval);
-  }, [fetchNotes]);
+  }, [fetchNotes, notes]);
 
   const handleProcess = async (noteId: string) => {
     setProcessingId(noteId);

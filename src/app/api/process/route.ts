@@ -179,7 +179,8 @@ export async function POST(request: Request) {
           const { data } = await db
             .from('adminpkm_faq_entries')
             .select('id, question, answer')
-            .in('id', faqIds);
+            .in('id', faqIds)
+            .eq('review_status', 'approved');
           existingFaqs = data || [];
         }
       }

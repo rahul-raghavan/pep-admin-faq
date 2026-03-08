@@ -58,7 +58,7 @@ export async function GET(request: Request) {
 
   let query = db
     .from('adminpkm_faq_entries')
-    .select('*, categories:adminpkm_faq_entry_categories(category:adminpkm_categories(*)), tags:adminpkm_faq_entry_tags(tag:adminpkm_tags(*))')
+    .select('id, question, answer, created_at, review_status, is_merged, categories:adminpkm_faq_entry_categories(category:adminpkm_categories(id, name, color)), tags:adminpkm_faq_entry_tags(tag:adminpkm_tags(id, name, color))')
     .eq('is_merged', false)
     .eq('review_status', 'approved')
     .order('created_at', { ascending: false });
@@ -77,12 +77,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Flatten nested join results
-  const flattened = (data || []).map((entry: Record<string, unknown>) => ({
-    ...entry,
-    categories: ((entry.categories as { category: unknown }[]) || []).map((c) => c.category),
-    tags: ((entry.tags as { tag: unknown }[]) || []).map((t) => t.tag),
-  }));
+  // Flatten nested join results + truncate answer for list view
+  const flattened = (data || []).map((entry: Record<string, unknown>) => {
+    const answer = (entry.answer as string) || '';
+    return {
+      ...entry,
+      answer: answer.length > 200 ? answer.slice(0, 200) + '...' : answer,
+      categories: ((entry.categories as { category: unknown }[]) || []).map((c) => c.category),
+      tags: ((entry.tags as { tag: unknown }[]) || []).map((t) => t.tag),
+    };
+  });
 
   return NextResponse.json(flattened);
 }

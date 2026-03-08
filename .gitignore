@@ -13,6 +13,11 @@
 # testing
 /coverage
 
+# Playwright
+e2e/auth/storageState.*.json
+playwright-report/
+test-results/
+
 # next.js
 /.next/
 /out/

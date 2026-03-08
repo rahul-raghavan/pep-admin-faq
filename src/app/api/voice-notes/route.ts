@@ -55,6 +55,8 @@ export async function POST(request: Request) {
     .single();
 
   if (dbError) {
+    // Clean up the uploaded file since the DB record wasn't created
+    await serviceClient.storage.from('adminpkm-voice-notes').remove([filePath]);
     return NextResponse.json(
       { error: `Database error: ${dbError.message}` },
       { status: 500 }
